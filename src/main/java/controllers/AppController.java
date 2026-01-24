@@ -14,20 +14,14 @@ import algorithm.instance.InstanceParams;
 import algorithm.solution.PackingSolution;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
-import javafx.scene.Node;
-import javafx.scene.control.Button;
-import javafx.scene.control.MenuButton;
-import javafx.scene.control.ProgressIndicator;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.scene.text.Text;
 import utils.UIUtils;
 import java.util.Date;
 import java.util.List;
 
 public class AppController {
-
-    @FXML
-    private VBox App;
 
     @FXML
     private TextField numRectangles;
@@ -69,7 +63,10 @@ public class AppController {
     private ProgressIndicator running2;
 
     @FXML
-    private GridPane Grid;
+    private ScrollPane ScrollPane;
+
+    @FXML
+    private Text Time;
 
     @FXML
     private void initialize() {
@@ -84,8 +81,6 @@ public class AppController {
         running1.setVisible(false);
         running2.setVisible(false);
         Run.setDisable(true);
-
-        Grid.setMaxHeight(Double.MAX_VALUE);
     }
 
     @FXML
@@ -137,8 +132,6 @@ public class AppController {
         Run.setText("");
         Run.setDisable(true);
 
-        Grid.getChildren().clear();
-
         // Create a background task
         Task<PackingSolution> task = new Task<>() {
             @Override
@@ -156,7 +149,8 @@ public class AppController {
                 Date startTime = new Date();
                 PackingSolution solution = solver.solve(initial, instance.rectangles);
                 Date endTime = new Date();
-                System.out.println("Solved in " + (endTime.getTime() - startTime.getTime()));
+                Time.setText("Time: " + (endTime.getTime() - startTime.getTime()) + " ms" +
+                             " | Boxes used: " + solution.boxes().size());
 
                 return solution;
             }
@@ -175,16 +169,7 @@ public class AppController {
             Run.setText("Run");
 
             List<Box> boxes = solution.boxes();
-
-            for (int i = 0; i < 16; i++) {
-                Node empty = UIUtils.loadComponent("EmptyBox");
-                Grid.add(empty, i % 4, i / 4);
-            }
-            for (int i = 16; i < boxes.size() + 16; i++) {
-//              Box box = boxes.get(i - 16);
-                Pane BoxUI = UIUtils.loadComponent("Box");
-                Grid.add(BoxUI, i % 4, i / 4);
-            }
+            visualize(boxes);
         });
 
         // Handle failures
@@ -203,5 +188,51 @@ public class AppController {
         Thread thread = new Thread(task);
         thread.setDaemon(true);
         thread.start();
+    }
+
+
+
+
+    public void visualize(List<Box> boxes) {
+        GridPane Grid = new GridPane();
+        Grid.setHgap(10);
+        Grid.setVgap(10);
+        ScrollPane.setContent(Grid);
+
+        for (int i = 0; i < boxes.size(); i++) {
+            Box box = boxes.get(i);
+            Pane BoxUI = UIUtils.loadComponent("Box");
+            assert BoxUI != null;
+
+            for (int j = 0; j < box.getRectangles().size(); j++) {
+                Rectangle rect = box.getRectangles().get(j);
+                javafx.scene.shape.Rectangle RectUI = new javafx.scene.shape.Rectangle();
+
+                double scale = BoxUI.getPrefWidth() / instance.boxSize;
+
+                RectUI.setWidth(rect.getWidth() * scale);
+                RectUI.setHeight(rect.getHeight() * scale);
+                RectUI.setLayoutX(rect.getX() * scale);
+                RectUI.setLayoutY(rect.getY() * scale);
+
+                if (rect.isRotated()) {
+                    RectUI.setStyle("-fx-fill: #f97316; -fx-stroke: black; -fx-stroke-width: 1;");
+                } else {
+                    RectUI.setStyle("-fx-fill: #3b82f6; -fx-stroke: black; -fx-stroke-width: 1;");
+                }
+
+                BoxUI.getChildren().add(RectUI);
+            }
+
+            // A small label showing utilization
+            double utilization = box.getUtilization();
+            Label utilizationLabel = new Label(String.format("%.2f%%", utilization));
+            utilizationLabel.setLayoutX(5);
+            utilizationLabel.setLayoutY(5);
+            utilizationLabel.setStyle("-fx-background-color: rgba(255, 255, 255, 0.7); -fx-padding: 2;");
+            BoxUI.getChildren().add(utilizationLabel);
+
+            Grid.add(BoxUI, i % 4, i / 4);
+        }
     }
 }
