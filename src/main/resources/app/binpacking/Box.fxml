@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.effect.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.*?>
+
+
+<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="200.0" prefWidth="200.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1">
+      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#d2d2d2" height="200.0" layoutX="36.0" layoutY="133.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="2.0" width="200.0">
+         <effect>
+            <DropShadow height="44.45" radius="22.457500000000003" width="47.38" />
+         </effect>
+      </Rectangle>
+</StackPane>
