@@ -157,12 +157,12 @@
                             <Font name="FiraCode Nerd Font Propo Light" size="15.0" />
                         </font>
                     </Label>
-                    <RadioButton layoutX="25.0" layoutY="227.0" mnemonicParsing="false" prefHeight="17.0" prefWidth="128.0" selected="true" text="Bottem Left">
+                    <RadioButton layoutX="25.0" layoutY="227.0" mnemonicParsing="false" prefHeight="17.0" prefWidth="128.0" selected="true" text="Bottom Left">
                         <toggleGroup>
                             <ToggleGroup fx:id="PuttingStrategy" />
                         </toggleGroup>
                     </RadioButton>
-                    <RadioButton layoutX="181.0" layoutY="227.0" mnemonicParsing="false" prefHeight="17.0" prefWidth="128.0" text="Shelf - algorithm" toggleGroup="$PuttingStrategy" />
+                    <RadioButton layoutX="181.0" layoutY="227.0" mnemonicParsing="false" prefHeight="17.0" prefWidth="128.0" text="Shelf" toggleGroup="$PuttingStrategy" />
                 </AnchorPane>
                 <Button fx:id="Run" layoutX="33.0" layoutY="375.0" mnemonicParsing="false" onAction="#RunAlgorithm" prefHeight="44.0" prefWidth="280.0" text="Run">
                     <font>
@@ -204,7 +204,7 @@
                         <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
                     </padding>
                 </Label>
-            <Text fx:id="Time" layoutX="230.0" layoutY="35.0" strokeType="OUTSIDE" strokeWidth="0.0">
+            <Text fx:id="Performance" layoutX="230.0" layoutY="35.0" strokeType="OUTSIDE" strokeWidth="0.0">
                <font>
                   <Font name="FiraCode Nerd Font Med" size="12.0" />
                </font>

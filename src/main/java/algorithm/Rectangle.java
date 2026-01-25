@@ -57,4 +57,12 @@ public class Rectangle implements Element {
     public Rectangle rotate() {
         return new Rectangle(height, width, !rotated);
     }
+
+    public boolean isSideway() {
+        return width > height;
+    }
+
+    public boolean isUpright() {
+        return height >= width;
+    }
 }

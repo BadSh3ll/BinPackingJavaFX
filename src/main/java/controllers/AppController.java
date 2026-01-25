@@ -4,10 +4,12 @@ import algorithm.AlgorithmType;
 import algorithm.Box;
 import algorithm.Rectangle;
 import algorithm.greedy.GreedySolver;
-import algorithm.greedy.extender.FirstFitPlacer;
 import algorithm.greedy.extender.GreedyExtender;
-import algorithm.greedy.ordering.LargestAreaFirst;
-import algorithm.greedy.putting.BottemLeft;
+import algorithm.greedy.extender.GreedyExtenderType;
+import algorithm.greedy.ordering.GreedyOrdering;
+import algorithm.greedy.ordering.GreedyOrderingType;
+import algorithm.greedy.putting.PuttingStrategy;
+import algorithm.greedy.putting.PuttingStrategyType;
 import algorithm.instance.Instance;
 import algorithm.instance.InstanceGenerator;
 import algorithm.instance.InstanceParams;
@@ -20,6 +22,7 @@ import javafx.scene.text.Text;
 import utils.UIUtils;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 public class AppController {
 
@@ -66,7 +69,15 @@ public class AppController {
     private ScrollPane ScrollPane;
 
     @FXML
-    private Text Time;
+    private Text Performance;
+
+
+    @FXML
+    private ToggleGroup SelectionStrategy;
+    @FXML
+    private ToggleGroup PuttingStrategy;
+    @FXML
+    private ToggleGroup GreedyStrategy;
 
     @FXML
     private void initialize() {
@@ -132,27 +143,41 @@ public class AppController {
         Run.setText("");
         Run.setDisable(true);
 
+
         // Create a background task
         Task<PackingSolution> task = new Task<>() {
             @Override
             protected PackingSolution call() {
-                // Solving
-                LargestAreaFirst ordering = new LargestAreaFirst();
-                BottemLeft putting = new BottemLeft();
-                GreedyExtender<PackingSolution, Rectangle> extender =
-                        new FirstFitPlacer(putting);
 
-                PackingSolution initial = new PackingSolution(instance.boxSize);
 
-                GreedySolver<PackingSolution, Rectangle> solver = new GreedySolver<>(ordering, extender);
+            // Get ordering, putting, and extender strategies from UI
+            RadioButton orderingButton = (RadioButton) SelectionStrategy.getSelectedToggle();
+            GreedyOrderingType orderingType = GreedyOrderingType.fromDisplayName(orderingButton.getText());
+            assert orderingType != null;
+            GreedyOrdering<Rectangle> ordering = UIUtils.getSelectedGreedyOrdering(Objects.requireNonNull(GreedyOrderingType.fromDisplayName(((RadioButton) SelectionStrategy.getSelectedToggle()).getText())));
 
-                Date startTime = new Date();
-                PackingSolution solution = solver.solve(initial, instance.rectangles);
-                Date endTime = new Date();
-                Time.setText("Time: " + (endTime.getTime() - startTime.getTime()) + " ms" +
-                             " | Boxes used: " + solution.boxes().size());
+            RadioButton puttingButton = (RadioButton) PuttingStrategy.getSelectedToggle();
+            PuttingStrategyType puttingType = PuttingStrategyType.fromDisplayName(puttingButton.getText());
+            assert puttingType != null;
+            PuttingStrategy putting = UIUtils.getSelectedPuttingStrategy(Objects.requireNonNull(PuttingStrategyType.fromDisplayName(((RadioButton) PuttingStrategy.getSelectedToggle()).getText())));
 
-                return solution;
+            RadioButton extenderButton = (RadioButton) GreedyStrategy.getSelectedToggle();
+            GreedyExtenderType extenderType = GreedyExtenderType.fromDisplayName(extenderButton.getText());
+            assert extenderType != null;
+            GreedyExtender<PackingSolution, Rectangle> extender = UIUtils.getSelectedGreedyExtender(Objects.requireNonNull(GreedyExtenderType.fromDisplayName(((RadioButton) GreedyStrategy.getSelectedToggle()).getText())), putting);
+
+            // Solve the instance
+            PackingSolution initial = new PackingSolution(instance.boxSize);
+
+            GreedySolver<PackingSolution, Rectangle> solver = new GreedySolver<>(ordering, extender);
+
+            Date startTime = new Date();
+            PackingSolution solution = solver.solve(initial, instance.rectangles);
+            Date endTime = new Date();
+            Performance.setText("Time: " + (endTime.getTime() - startTime.getTime()) + " ms" +
+                         " | Boxes used: " + solution.boxes().size());
+
+            return solution;
             }
         };
 
@@ -191,9 +216,7 @@ public class AppController {
     }
 
 
-
-
-    public void visualize(List<Box> boxes) {
+    private void visualize(List<Box> boxes) {
         GridPane Grid = new GridPane();
         Grid.setHgap(10);
         Grid.setVgap(10);
