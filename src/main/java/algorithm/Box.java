@@ -18,6 +18,7 @@ public class Box {
     public int getSize() {
         return size;
     }
+    public int getArea() { return area; }
 
     public void addRectangle(Rectangle rectangle, int X, int Y) {
         rectangles.add(rectangle);
@@ -63,5 +64,14 @@ public class Box {
             rectangle.getX() + rectangle.getWidth() > size ||
             rectangle.getY() + rectangle.getHeight() > size
         );
+    }
+
+    public Box copy() {
+        Box newBox = new Box(this.size);
+        for (Rectangle rectangle : this.rectangles) {
+            Rectangle newRectangle = rectangle.copy();
+            newBox.addRectangle(newRectangle, newRectangle.getX(), newRectangle.getY());
+        }
+        return newBox;
     }
 }

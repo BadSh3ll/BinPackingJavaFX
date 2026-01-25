@@ -21,7 +21,7 @@ public class BestFitPlacer
         PackingSolution solution,
         Rectangle rectangle
     ) {
-        // Try existing boxes to find tightest fit
+        // Try existing boxes to find the tightest fit
         int bestArea = Integer.MAX_VALUE;
         Box bestBox = null;
         TryPutResult bestPosition = null;
@@ -29,7 +29,7 @@ public class BestFitPlacer
         for (Box box : solution.boxes()) {
             TryPutResult result = putting.tryPut(rectangle, box);
             if (result != null) {
-                int area = rectangle.getArea() + box.getUsedArea();
+                int area = box.getArea() - rectangle.getArea() - box.getUsedArea();
                 if (area < bestArea) {
                     bestArea = area;
                     bestBox = box;
@@ -48,7 +48,7 @@ public class BestFitPlacer
         }
 
         // Create a new box if no existing box can fit the rectangle
-        Box newBox = new Box(bestArea);
+        Box newBox = new Box(solution.boxes().getFirst().getSize());
         newBox.addRectangle(rectangle, 0, 0);
 
         solution.addBox(newBox);

@@ -14,7 +14,7 @@ public class App extends Application {
     public void start(Stage stage) throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource("App.fxml"));
         Scene scene = new Scene(fxmlLoader.load());
-        stage.setTitle("BinPacking with Dr.Kasten Weihe!");
+        stage.setTitle("BinPacking with Dr.Kasten Weihe! 🚀 made by Thanh Nguyen");
         stage.getIcons().add(new Image(Objects.requireNonNull(App.class.getResourceAsStream("box.png"))));
         stage.setScene(scene);
         stage.show();

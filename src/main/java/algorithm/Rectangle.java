@@ -65,4 +65,10 @@ public class Rectangle implements Element {
     public boolean isUpright() {
         return height >= width;
     }
+
+    public Rectangle copy() {
+        Rectangle rect = new Rectangle(this.width, this.height, this.rotated);
+        rect.setPosition(this.x, this.y);
+        return rect;
+    }
 }

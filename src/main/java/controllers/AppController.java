@@ -13,6 +13,11 @@ import algorithm.greedy.putting.PuttingStrategyType;
 import algorithm.instance.Instance;
 import algorithm.instance.InstanceGenerator;
 import algorithm.instance.InstanceParams;
+import algorithm.localsearch.LocalSearchSolver;
+import algorithm.localsearch.neighborhood.Geometry;
+import algorithm.localsearch.neighborhood.Neighborhood;
+import algorithm.localsearch.objective.KampkeObjective;
+import algorithm.localsearch.objective.Objective;
 import algorithm.solution.PackingSolution;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
@@ -80,6 +85,9 @@ public class AppController {
     private ToggleGroup GreedyStrategy;
 
     @FXML
+    private TextField maxIterations;
+
+    @FXML
     private void initialize() {
         // force the fields to be numeric only
         UIUtils.enforceNumeric(numRectangles);
@@ -124,7 +132,6 @@ public class AppController {
             Integer.parseInt(maxWidth.getText()),
             Integer.parseInt(maxHeight.getText())
         );
-        System.out.println("Generating instance...");
         instance = InstanceGenerator.generate(params);
         Generate.setDisable(false);
         running1.setVisible(false);
@@ -149,35 +156,12 @@ public class AppController {
             @Override
             protected PackingSolution call() {
 
+                AlgorithmType algorithmType = AlgorithmType.fromString(algorithm.getText());
+                return switch (algorithmType) {
+                    case GREEDY -> RunGreedy();
+                    case LOCAL_SEARCH -> RunLocalSearch();
+                };
 
-            // Get ordering, putting, and extender strategies from UI
-            RadioButton orderingButton = (RadioButton) SelectionStrategy.getSelectedToggle();
-            GreedyOrderingType orderingType = GreedyOrderingType.fromDisplayName(orderingButton.getText());
-            assert orderingType != null;
-            GreedyOrdering<Rectangle> ordering = UIUtils.getSelectedGreedyOrdering(Objects.requireNonNull(GreedyOrderingType.fromDisplayName(((RadioButton) SelectionStrategy.getSelectedToggle()).getText())));
-
-            RadioButton puttingButton = (RadioButton) PuttingStrategy.getSelectedToggle();
-            PuttingStrategyType puttingType = PuttingStrategyType.fromDisplayName(puttingButton.getText());
-            assert puttingType != null;
-            PuttingStrategy putting = UIUtils.getSelectedPuttingStrategy(Objects.requireNonNull(PuttingStrategyType.fromDisplayName(((RadioButton) PuttingStrategy.getSelectedToggle()).getText())));
-
-            RadioButton extenderButton = (RadioButton) GreedyStrategy.getSelectedToggle();
-            GreedyExtenderType extenderType = GreedyExtenderType.fromDisplayName(extenderButton.getText());
-            assert extenderType != null;
-            GreedyExtender<PackingSolution, Rectangle> extender = UIUtils.getSelectedGreedyExtender(Objects.requireNonNull(GreedyExtenderType.fromDisplayName(((RadioButton) GreedyStrategy.getSelectedToggle()).getText())), putting);
-
-            // Solve the instance
-            PackingSolution initial = new PackingSolution(instance.boxSize);
-
-            GreedySolver<PackingSolution, Rectangle> solver = new GreedySolver<>(ordering, extender);
-
-            Date startTime = new Date();
-            PackingSolution solution = solver.solve(initial, instance.rectangles);
-            Date endTime = new Date();
-            Performance.setText("Time: " + (endTime.getTime() - startTime.getTime()) + " ms" +
-                         " | Boxes used: " + solution.boxes().size());
-
-            return solution;
             }
         };
 
@@ -215,6 +199,63 @@ public class AppController {
         thread.start();
     }
 
+    private PackingSolution RunGreedy() {
+        // Get ordering
+        RadioButton orderingButton = (RadioButton) SelectionStrategy.getSelectedToggle();
+        GreedyOrderingType orderingType = GreedyOrderingType.fromDisplayName(orderingButton.getText());
+        assert orderingType != null;
+        GreedyOrdering<Rectangle> ordering = UIUtils.getSelectedGreedyOrdering(Objects.requireNonNull(GreedyOrderingType.fromDisplayName(((RadioButton) SelectionStrategy.getSelectedToggle()).getText())));
+
+        // Get putting strategy
+        RadioButton puttingButton = (RadioButton) PuttingStrategy.getSelectedToggle();
+        PuttingStrategyType puttingType = PuttingStrategyType.fromDisplayName(puttingButton.getText());
+        assert puttingType != null;
+        PuttingStrategy putting = UIUtils.getSelectedPuttingStrategy(Objects.requireNonNull(PuttingStrategyType.fromDisplayName(((RadioButton) PuttingStrategy.getSelectedToggle()).getText())));
+
+        // Get extender
+        RadioButton extenderButton = (RadioButton) GreedyStrategy.getSelectedToggle();
+        GreedyExtenderType extenderType = GreedyExtenderType.fromDisplayName(extenderButton.getText());
+        assert extenderType != null;
+        GreedyExtender<PackingSolution, Rectangle> extender = UIUtils.getSelectedGreedyExtender(Objects.requireNonNull(GreedyExtenderType.fromDisplayName(((RadioButton) GreedyStrategy.getSelectedToggle()).getText())), putting);
+
+        // Solve the instance
+        PackingSolution initial = new PackingSolution(instance.boxSize);
+
+        GreedySolver<PackingSolution, Rectangle> solver = new GreedySolver<>(ordering, extender);
+
+        Date startTime = new Date();
+        PackingSolution solution = solver.solve(initial, instance.rectangles);
+        Date endTime = new Date();
+        Performance.setText("Time: " + (endTime.getTime() - startTime.getTime()) + " ms" +
+                " | Boxes used: " + solution.boxes().size());
+
+        return solution;
+    }
+
+    private PackingSolution RunLocalSearch() {
+
+        // Initial solution via greedy - first fit - largest area - shelf
+        PuttingStrategy putting = UIUtils.getSelectedPuttingStrategy(PuttingStrategyType.SHELF);
+        GreedyExtender<PackingSolution, Rectangle> extender = UIUtils.getSelectedGreedyExtender(GreedyExtenderType.FIRST_FIT, putting);
+        GreedyOrdering<Rectangle> ordering = UIUtils.getSelectedGreedyOrdering(GreedyOrderingType.LARGEST_AREA_FIRST);
+        GreedySolver<PackingSolution, Rectangle> greedySolver = new GreedySolver<>(ordering, extender);
+        PackingSolution initialSolution = new PackingSolution(instance.boxSize);
+        Date startTime = new Date();
+        PackingSolution greedySolution = greedySolver.solve(initialSolution, instance.rectangles);
+
+        // Local search
+        Neighborhood<PackingSolution> neighborhood = new Geometry();
+        Objective<PackingSolution> objective = new KampkeObjective();
+        LocalSearchSolver<PackingSolution> localSearchSolver = new LocalSearchSolver<>(neighborhood, objective, Integer.parseInt(maxIterations.getText()));
+        PackingSolution improvedSolution = localSearchSolver.solve(greedySolution);
+        Date endTime = new Date();
+
+        Performance.setText("Time: " + (endTime.getTime() - startTime.getTime()) + " ms" +
+                " | Boxes used: " + improvedSolution.boxes().size() +
+                " | Improvement: " + (greedySolution.boxes().size() - improvedSolution.boxes().size()) + " boxes");
+
+        return improvedSolution;
+    }
 
     private void visualize(List<Box> boxes) {
         GridPane Grid = new GridPane();
