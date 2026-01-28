@@ -9,10 +9,7 @@ import algorithm.greedy.ordering.GreedyOrdering;
 import algorithm.greedy.ordering.GreedyOrderingType;
 import algorithm.greedy.ordering.LargestAreaFirst;
 import algorithm.greedy.ordering.LargestSideFirst;
-import algorithm.greedy.putting.BottemLeft;
-import algorithm.greedy.putting.PuttingStrategy;
-import algorithm.greedy.putting.PuttingStrategyType;
-import algorithm.greedy.putting.Shelf;
+import algorithm.greedy.putting.*;
 import algorithm.solution.PackingSolution;
 import app.binpacking.App;
 import javafx.fxml.FXMLLoader;
@@ -63,7 +60,7 @@ public class UIUtils {
         if (Objects.requireNonNull(type) == PuttingStrategyType.SHELF) {
             return new Shelf();
         }
-        return new BottemLeft();
+        return new ImprovedBottomLeft();
     }
 
     public static GreedyExtender<PackingSolution, Rectangle> getSelectedGreedyExtender(GreedyExtenderType type, PuttingStrategy putting) {

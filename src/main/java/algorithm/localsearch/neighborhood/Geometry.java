@@ -7,7 +7,7 @@ import algorithm.greedy.extender.FirstFitPlacer;
 import algorithm.greedy.extender.GreedyExtender;
 import algorithm.greedy.ordering.GreedyOrdering;
 import algorithm.greedy.ordering.LargestAreaFirst;
-import algorithm.greedy.putting.BottemLeft;
+import algorithm.greedy.putting.ImprovedBottomLeft;
 import algorithm.greedy.putting.PuttingStrategy;
 import algorithm.solution.PackingSolution;
 
@@ -21,7 +21,7 @@ public class Geometry implements Neighborhood<PackingSolution> {
 
     public Geometry() {
         GreedyOrdering<Rectangle> ordering = new LargestAreaFirst();
-        PuttingStrategy puttingStrategy = new BottemLeft();
+        PuttingStrategy puttingStrategy = new ImprovedBottomLeft();
         GreedyExtender<PackingSolution, Rectangle> extender = new FirstFitPlacer(puttingStrategy);
         this.greedySolver = new GreedySolver<>(ordering, extender);
     }

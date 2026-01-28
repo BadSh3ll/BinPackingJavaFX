@@ -7,24 +7,7 @@ import java.util.List;
 
 public class BottemLeft implements PuttingStrategy {
 
-    private class Candidate {
-
-        private final int x;
-        private final int y;
-
-        public Candidate(int x, int y) {
-            this.x = x;
-            this.y = y;
-        }
-
-        public int getX() {
-            return x;
-        }
-
-        public int getY() {
-            return y;
-        }
-    }
+    private record Candidate(int x, int y) { }
 
     @Override
     public TryPutResult tryPut(Rectangle rectangle, Box box) {
@@ -35,19 +18,19 @@ public class BottemLeft implements PuttingStrategy {
         // Then sides of placed rectangles
         for (Rectangle rect : box.getRectangles()) {
             candidates.add(
-                new Candidate(rect.getX() + rect.getWidth(), rect.getY())
+                    new Candidate(rect.getX() + rect.getWidth(), rect.getY())
             );
             candidates.add(
-                new Candidate(rect.getX(), rect.getY() + rect.getHeight())
+                    new Candidate(rect.getX(), rect.getY() + rect.getHeight())
             );
         }
 
         // Sort by y-coordinate, then by x-coordinate (bottom-left)
         candidates.sort((c1, c2) -> {
-            int x1 = c1.getX();
-            int y1 = c1.getY();
-            int x2 = c2.getX();
-            int y2 = c2.getY();
+            int x1 = c1.x();
+            int y1 = c1.y();
+            int x2 = c2.x();
+            int y2 = c2.y();
             if (y1 == y2) {
                 return x1 - x2;
             }
@@ -63,24 +46,24 @@ public class BottemLeft implements PuttingStrategy {
                     : new Rectangle(
                           rectangle.getWidth(),
                           rectangle.getHeight(),
-                          rotated
+                        false
                       );
 
-                testRect.setPosition(candidate.getX(), candidate.getY());
+                testRect.setPosition(candidate.x(), candidate.y());
 
                 boolean isOverflow = box.isOverflow(testRect);
                 boolean isOverlapping = box.isOverlapping(testRect);
 
                 if (!isOverflow && !isOverlapping) {
                     return new TryPutResult(
-                        candidate.getX(),
-                        candidate.getY(),
+                        candidate.x(),
+                        candidate.y(),
                         rotated
                     );
                 }
             }
         }
 
-        return null;
+        return TryPutResult.fail();
     }
 }
