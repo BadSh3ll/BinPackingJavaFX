@@ -16,9 +16,12 @@ import algorithm.instance.InstanceParams;
 import algorithm.localsearch.LocalSearchSolver;
 import algorithm.localsearch.neighborhood.Geometry;
 import algorithm.localsearch.neighborhood.Neighborhood;
+import algorithm.localsearch.neighborhood.Permutation;
 import algorithm.localsearch.objective.KampkeObjective;
 import algorithm.localsearch.objective.Objective;
+import algorithm.localsearch.objective.PermutationObjective;
 import algorithm.solution.PackingSolution;
+import algorithm.solution.PermutationSolution;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -235,26 +238,37 @@ public class AppController {
     private PackingSolution RunLocalSearch() {
 
         // Initial solution via greedy - first fit - largest area - shelf
-        PuttingStrategy putting = UIUtils.getSelectedPuttingStrategy(PuttingStrategyType.SHELF);
-        GreedyExtender<PackingSolution, Rectangle> extender = UIUtils.getSelectedGreedyExtender(GreedyExtenderType.FIRST_FIT, putting);
-        GreedyOrdering<Rectangle> ordering = UIUtils.getSelectedGreedyOrdering(GreedyOrderingType.LARGEST_AREA_FIRST);
-        GreedySolver<PackingSolution, Rectangle> greedySolver = new GreedySolver<>(ordering, extender);
-        PackingSolution initialSolution = new PackingSolution(instance.boxSize);
-        Date startTime = new Date();
-        PackingSolution greedySolution = greedySolver.solve(initialSolution, instance.rectangles);
+//        PuttingStrategy putting = UIUtils.getSelectedPuttingStrategy(PuttingStrategyType.SHELF);
+//        GreedyExtender<PackingSolution, Rectangle> extender = UIUtils.getSelectedGreedyExtender(GreedyExtenderType.FIRST_FIT, putting);
+//        GreedyOrdering<Rectangle> ordering = UIUtils.getSelectedGreedyOrdering(GreedyOrderingType.LARGEST_AREA_FIRST);
+//        GreedySolver<PackingSolution, Rectangle> greedySolver = new GreedySolver<>(ordering, extender);
+//        PackingSolution initialSolution = new PackingSolution(instance.boxSize);
+//        Date startTime = new Date();
+//        PackingSolution greedySolution = greedySolver.solve(initialSolution, instance.rectangles);
+//
+//        // Local search
+//        Neighborhood<PackingSolution> neighborhood = new Geometry();
+//        Objective<PackingSolution> objective = new KampkeObjective();
+//        LocalSearchSolver<PackingSolution> localSearchSolver = new LocalSearchSolver<>(neighborhood, objective, Integer.parseInt(maxIterations.getText()));
+//        PackingSolution improvedSolution = localSearchSolver.solve(greedySolution);
+//        Date endTime = new Date();
 
-        // Local search
-        Neighborhood<PackingSolution> neighborhood = new Geometry();
-        Objective<PackingSolution> objective = new KampkeObjective();
-        LocalSearchSolver<PackingSolution> localSearchSolver = new LocalSearchSolver<>(neighborhood, objective, Integer.parseInt(maxIterations.getText()));
-        PackingSolution improvedSolution = localSearchSolver.solve(greedySolution);
+
+        Neighborhood<PermutationSolution> neighborhood = new Permutation();
+        Objective<PermutationSolution> objective = new PermutationObjective();
+        LocalSearchSolver<PermutationSolution> localSearchSolver = new LocalSearchSolver<>(neighborhood, objective, Integer.parseInt(maxIterations.getText()));
+        PermutationSolution initial = new PermutationSolution(instance.rectangles, instance.boxSize);
+        Date startTime = new Date();
+        PermutationSolution solution = localSearchSolver.solve(initial);
         Date endTime = new Date();
 
+//        Performance.setText("Time: " + (endTime.getTime() - startTime.getTime()) + " ms" +
+//                " | Boxes used: " + improvedSolution.boxes().size() +
+//                " | Improvement: " + (greedySolution.boxes().size() - improvedSolution.boxes().size()) + " boxes");
+        PackingSolution result = solution.decode();
         Performance.setText("Time: " + (endTime.getTime() - startTime.getTime()) + " ms" +
-                " | Boxes used: " + improvedSolution.boxes().size() +
-                " | Improvement: " + (greedySolution.boxes().size() - improvedSolution.boxes().size()) + " boxes");
-
-        return improvedSolution;
+                " | Boxes used: " + result.boxes().size() );
+        return solution.decode();
     }
 
     private void visualize(List<Box> boxes) {
