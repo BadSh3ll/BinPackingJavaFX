@@ -1,3 +1,5 @@
 package algorithm.solution;
 
-public interface Solution {}
+public interface Solution {
+    Solution copy();
+}
