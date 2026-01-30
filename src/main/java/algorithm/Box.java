@@ -50,6 +50,35 @@ public class Box {
         );
     }
 
+    public double overlapRate(Rectangle rect1, Rectangle rect2) {
+        if (!isOverlapping(rect1, rect2)) {
+            return 0.0;
+        }
+        int xOverlap = Math.min(
+                rect1.getX() + rect1.getWidth(),
+                rect2.getX() + rect2.getWidth()) - Math.max(rect1.getX(), rect2.getX()
+        );
+        int yOverlap = Math.min(
+                rect1.getY() + rect1.getHeight(),
+                rect2.getY() + rect2.getHeight()) - Math.max(rect1.getY(), rect2.getY()
+        );
+        int overlapArea = xOverlap * yOverlap;
+        int largerArea = Math.max(rect1.getArea(), rect2.getArea());
+        return (double) overlapArea / largerArea;
+    }
+
+    public double totalOverlapRate() {
+        double totalRate = 0.0;
+        int count = 0;
+        for (int i = 0; i < rectangles.size(); i++) {
+            for (int j = i + 1; j < rectangles.size(); j++) {
+                totalRate += overlapRate(rectangles.get(i), rectangles.get(j));
+                count++;
+            }
+        }
+        return count == 0 ? 0.0 : totalRate / count;
+    }
+
     public boolean isOverlapping(Rectangle rectangle) {
         for (Rectangle rect : rectangles) {
             if (isOverlapping(rect, rectangle)) {

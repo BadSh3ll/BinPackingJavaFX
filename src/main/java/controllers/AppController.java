@@ -16,10 +16,13 @@ import algorithm.instance.InstanceParams;
 import algorithm.localsearch.LocalSearchSolver;
 import algorithm.localsearch.neighborhood.Geometry;
 import algorithm.localsearch.neighborhood.Neighborhood;
+import algorithm.localsearch.neighborhood.Overlap;
 import algorithm.localsearch.neighborhood.Permutation;
 import algorithm.localsearch.objective.KampkeObjective;
 import algorithm.localsearch.objective.Objective;
+import algorithm.localsearch.objective.OverlapObjective;
 import algorithm.localsearch.objective.PermutationObjective;
+import algorithm.solution.OverlapPackingSolution;
 import algorithm.solution.PackingSolution;
 import algorithm.solution.PermutationSolution;
 import javafx.concurrent.Task;
@@ -253,22 +256,33 @@ public class AppController {
 //        PackingSolution improvedSolution = localSearchSolver.solve(greedySolution);
 //        Date endTime = new Date();
 
-
-        Neighborhood<PermutationSolution> neighborhood = new Permutation();
-        Objective<PermutationSolution> objective = new PermutationObjective();
-        LocalSearchSolver<PermutationSolution> localSearchSolver = new LocalSearchSolver<>(neighborhood, objective, Integer.parseInt(maxIterations.getText()));
-        PermutationSolution initial = new PermutationSolution(instance.rectangles, instance.boxSize);
-        Date startTime = new Date();
-        PermutationSolution solution = localSearchSolver.solve(initial);
-        Date endTime = new Date();
+//        Neighborhood<PermutationSolution> neighborhood = new Permutation();
+//        Objective<PermutationSolution> objective = new PermutationObjective();
+//        LocalSearchSolver<PermutationSolution> localSearchSolver = new LocalSearchSolver<>(neighborhood, objective, Integer.parseInt(maxIterations.getText()));
+//        PermutationSolution initial = new PermutationSolution(instance.rectangles, instance.boxSize);
+//        Date startTime = new Date();
+//        PermutationSolution solution = localSearchSolver.solve(initial);
+//        Date endTime = new Date();
 
 //        Performance.setText("Time: " + (endTime.getTime() - startTime.getTime()) + " ms" +
 //                " | Boxes used: " + improvedSolution.boxes().size() +
 //                " | Improvement: " + (greedySolution.boxes().size() - improvedSolution.boxes().size()) + " boxes");
-        PackingSolution result = solution.decode();
+//        PackingSolution result = solution.decode();
+//        Performance.setText("Time: " + (endTime.getTime() - startTime.getTime()) + " ms" +
+//                " | Boxes used: " + result.boxes().size() );
+//        return solution.decode();
+
+        OverlapPackingSolution initial = OverlapPackingSolution.random(instance);
+        System.out.println(initial.boxes().size());
+        Neighborhood<OverlapPackingSolution> neighborhood = new Overlap();
+        Objective<OverlapPackingSolution> objective = new OverlapObjective();
+        LocalSearchSolver<OverlapPackingSolution> localSearchSolver = new LocalSearchSolver<>(neighborhood, objective, Integer.parseInt(maxIterations.getText()));
+        Date startTime = new Date();
+        OverlapPackingSolution solution = localSearchSolver.solve(initial);
+        Date endTime = new Date();
         Performance.setText("Time: " + (endTime.getTime() - startTime.getTime()) + " ms" +
-                " | Boxes used: " + result.boxes().size() );
-        return solution.decode();
+                " | Boxes used: " + solution.boxes().size() );
+        return solution;
     }
 
     private void visualize(List<Box> boxes) {
