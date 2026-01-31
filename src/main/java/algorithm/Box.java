@@ -64,19 +64,17 @@ public class Box {
         );
         int overlapArea = xOverlap * yOverlap;
         int largerArea = Math.max(rect1.getArea(), rect2.getArea());
-        return (double) overlapArea / largerArea;
+        return (double) (overlapArea / largerArea) * 100;
     }
 
     public double totalOverlapRate() {
         double totalRate = 0.0;
-        int count = 0;
         for (int i = 0; i < rectangles.size(); i++) {
             for (int j = i + 1; j < rectangles.size(); j++) {
                 totalRate += overlapRate(rectangles.get(i), rectangles.get(j));
-                count++;
             }
         }
-        return count == 0 ? 0.0 : totalRate / count;
+        return totalRate;
     }
 
     public boolean isOverlapping(Rectangle rectangle) {

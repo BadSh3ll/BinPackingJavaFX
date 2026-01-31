@@ -8,6 +8,7 @@ public class LocalSearchSolver<S extends Solution> {
 
     private final Neighborhood<S> neighborhood;
     private final Objective<S> objective;
+    private final Termination termination = new Termination();
     private final int maxIterations;
 
     public LocalSearchSolver(Neighborhood<S> neighborhood, Objective<S> objective, int maxIterations) {
@@ -20,8 +21,9 @@ public class LocalSearchSolver<S extends Solution> {
         S current = initial;
         double currentScore = objective.evaluate(current);
 
-        for (int i = 0; i < maxIterations; i++) {
-            S bestNeighbor = null;
+        int iteration = 0;
+        while (!termination.shouldStop(iteration, maxIterations, current, currentScore)) {
+            S bestNeighbor = current;
             double bestScore = currentScore;
             for (S neighbor : neighborhood.getNeighbors(current)) {
                 double neighborScore = objective.evaluate(neighbor);
@@ -31,12 +33,9 @@ public class LocalSearchSolver<S extends Solution> {
                 }
             }
 
-            if (bestNeighbor == null) {
-                break; // No better neighbor found
-            }
-
             current = bestNeighbor;
             currentScore = bestScore;
+            iteration++;
         }
         return current;
     }

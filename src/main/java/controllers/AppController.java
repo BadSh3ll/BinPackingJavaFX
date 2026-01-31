@@ -4,20 +4,20 @@ import algorithm.AlgorithmType;
 import algorithm.Box;
 import algorithm.Rectangle;
 import algorithm.greedy.GreedySolver;
+import algorithm.greedy.extender.FirstFitPlacer;
 import algorithm.greedy.extender.GreedyExtender;
 import algorithm.greedy.extender.GreedyExtenderType;
 import algorithm.greedy.ordering.GreedyOrdering;
 import algorithm.greedy.ordering.GreedyOrderingType;
+import algorithm.greedy.ordering.LargestAreaFirst;
 import algorithm.greedy.putting.PuttingStrategy;
 import algorithm.greedy.putting.PuttingStrategyType;
+import algorithm.greedy.putting.Shelf;
 import algorithm.instance.Instance;
 import algorithm.instance.InstanceGenerator;
 import algorithm.instance.InstanceParams;
 import algorithm.localsearch.LocalSearchSolver;
-import algorithm.localsearch.neighborhood.Geometry;
-import algorithm.localsearch.neighborhood.Neighborhood;
-import algorithm.localsearch.neighborhood.Overlap;
-import algorithm.localsearch.neighborhood.Permutation;
+import algorithm.localsearch.neighborhood.*;
 import algorithm.localsearch.objective.KampkeObjective;
 import algorithm.localsearch.objective.Objective;
 import algorithm.localsearch.objective.OverlapObjective;
@@ -31,6 +31,8 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.text.Text;
 import utils.UIUtils;
+
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -90,6 +92,8 @@ public class AppController {
     @FXML
     private ToggleGroup GreedyStrategy;
 
+    @FXML
+    private ToggleGroup Neighborhood;
     @FXML
     private TextField maxIterations;
 
@@ -196,7 +200,7 @@ public class AppController {
             Run.setDisable(false);
             Run.setText("Run");
 
-            System.err.println("Algorithm failed: " + task.getException());
+            System.err.println("Algorithm failed: ");
         });
 
         // Start the task on a background thread
@@ -240,40 +244,70 @@ public class AppController {
 
     private PackingSolution RunLocalSearch() {
 
-        // Initial solution via greedy - first fit - largest area - shelf
-//        PuttingStrategy putting = UIUtils.getSelectedPuttingStrategy(PuttingStrategyType.SHELF);
-//        GreedyExtender<PackingSolution, Rectangle> extender = UIUtils.getSelectedGreedyExtender(GreedyExtenderType.FIRST_FIT, putting);
-//        GreedyOrdering<Rectangle> ordering = UIUtils.getSelectedGreedyOrdering(GreedyOrderingType.LARGEST_AREA_FIRST);
-//        GreedySolver<PackingSolution, Rectangle> greedySolver = new GreedySolver<>(ordering, extender);
-//        PackingSolution initialSolution = new PackingSolution(instance.boxSize);
-//        Date startTime = new Date();
-//        PackingSolution greedySolution = greedySolver.solve(initialSolution, instance.rectangles);
-//
-//        // Local search
-//        Neighborhood<PackingSolution> neighborhood = new Geometry();
-//        Objective<PackingSolution> objective = new KampkeObjective();
-//        LocalSearchSolver<PackingSolution> localSearchSolver = new LocalSearchSolver<>(neighborhood, objective, Integer.parseInt(maxIterations.getText()));
-//        PackingSolution improvedSolution = localSearchSolver.solve(greedySolution);
-//        Date endTime = new Date();
+        NeighborhoodType type = NeighborhoodType.fromDisplayName(((RadioButton) Neighborhood.getSelectedToggle()).getText());
 
-//        Neighborhood<PermutationSolution> neighborhood = new Permutation();
-//        Objective<PermutationSolution> objective = new PermutationObjective();
-//        LocalSearchSolver<PermutationSolution> localSearchSolver = new LocalSearchSolver<>(neighborhood, objective, Integer.parseInt(maxIterations.getText()));
-//        PermutationSolution initial = new PermutationSolution(instance.rectangles, instance.boxSize);
-//        Date startTime = new Date();
-//        PermutationSolution solution = localSearchSolver.solve(initial);
-//        Date endTime = new Date();
+        switch (type) {
+            case NeighborhoodType.GEOMETRY -> {
+                return RunGeometry();
+            }
+            case NeighborhoodType.PERMUTATION -> {
+                return RunPermutation();
+            }
+            case NeighborhoodType.OVERLAP -> {
+                return RunOverlap();
+            }
+            case null -> {
+                return RunGeometry();
+            }
+        }
+    }
 
-//        Performance.setText("Time: " + (endTime.getTime() - startTime.getTime()) + " ms" +
-//                " | Boxes used: " + improvedSolution.boxes().size() +
-//                " | Improvement: " + (greedySolution.boxes().size() - improvedSolution.boxes().size()) + " boxes");
-//        PackingSolution result = solution.decode();
-//        Performance.setText("Time: " + (endTime.getTime() - startTime.getTime()) + " ms" +
-//                " | Boxes used: " + result.boxes().size() );
-//        return solution.decode();
+    private PackingSolution RunGeometry() {
+        // Initial solution via Greedy
+        PuttingStrategy putting = new Shelf();
+        GreedyExtender<PackingSolution, Rectangle> extender = new FirstFitPlacer(putting);
+        GreedyOrdering<Rectangle> ordering = new LargestAreaFirst();
+        GreedySolver<PackingSolution, Rectangle> greedySolver = new GreedySolver<>(ordering, extender);
+        PackingSolution initialSolution = new PackingSolution(instance.boxSize);
+        List<Rectangle> rectangles = new ArrayList<>();
+        for (Rectangle rect : instance.rectangles) {
+            rectangles.add(rect.copy());
+        }
+        Date startTime = new Date();
+        PackingSolution greedySolution = greedySolver.solve(initialSolution, rectangles);
 
-        OverlapPackingSolution initial = OverlapPackingSolution.random(instance);
-        System.out.println(initial.boxes().size());
+        // Local search
+        Neighborhood<PackingSolution> neighborhood = new Geometry();
+        Objective<PackingSolution> objective = new KampkeObjective();
+        LocalSearchSolver<PackingSolution> localSearchSolver = new LocalSearchSolver<>(neighborhood, objective, Integer.parseInt(maxIterations.getText()));
+        System.out.println("Solving with initial boxes: " + greedySolution.boxes().size());
+        PackingSolution improvedSolution = localSearchSolver.solve(greedySolution.copy());
+        Date endTime = new Date();
+        Performance.setText("Time: " + (endTime.getTime() - startTime.getTime()) + " ms" +
+                " | Boxes used: " + improvedSolution.boxes().size() +
+                " | Boxes improved: " + (greedySolution.boxes().size() - improvedSolution.boxes().size()));
+        return improvedSolution;
+    }
+
+    private PackingSolution RunPermutation() {
+
+        Neighborhood<PermutationSolution> neighborhood = new Permutation();
+        Objective<PermutationSolution> objective = new PermutationObjective();
+        LocalSearchSolver<PermutationSolution> localSearchSolver = new LocalSearchSolver<>(neighborhood, objective, Integer.parseInt(maxIterations.getText()));
+        PermutationSolution initial = new PermutationSolution(instance.rectangles, instance.boxSize);
+        Date startTime = new Date();
+        PermutationSolution solution = localSearchSolver.solve(initial);
+        Date endTime = new Date();
+
+        PackingSolution decodedSolution = solution.decode();
+        Performance.setText("Time: " + (endTime.getTime() - startTime.getTime()) + " ms" +
+                " | Boxes used: " + decodedSolution.boxes().size() );
+        return decodedSolution;
+    }
+
+    private PackingSolution RunOverlap() {
+        OverlapPackingSolution initial = OverlapPackingSolution.init(instance, Integer.parseInt(maxIterations.getText()));
+        System.out.println("Initial Box Used: " + initial.boxes().size());
         Neighborhood<OverlapPackingSolution> neighborhood = new Overlap();
         Objective<OverlapPackingSolution> objective = new OverlapObjective();
         LocalSearchSolver<OverlapPackingSolution> localSearchSolver = new LocalSearchSolver<>(neighborhood, objective, Integer.parseInt(maxIterations.getText()));
