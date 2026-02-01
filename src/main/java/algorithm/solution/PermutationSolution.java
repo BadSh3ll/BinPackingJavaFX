@@ -6,7 +6,7 @@ import algorithm.greedy.extender.FirstFitPlacer;
 import algorithm.greedy.extender.GreedyExtender;
 import algorithm.greedy.ordering.GreedyOrdering;
 import algorithm.greedy.ordering.NoOrdering;
-import algorithm.greedy.putting.BottemLeft;
+import algorithm.greedy.putting.BottomLeft;
 import algorithm.greedy.putting.PuttingStrategy;
 
 import java.util.ArrayList;
@@ -28,7 +28,7 @@ public class PermutationSolution implements Solution {
     public PermutationSolution(List<Rectangle> initial, int boxSize) {
         if (greedySolver == null) {
             GreedyOrdering<Rectangle> ordering = new NoOrdering();
-            PuttingStrategy putting = new BottemLeft();
+            PuttingStrategy putting = new BottomLeft();
             GreedyExtender<PackingSolution, Rectangle> extender = new FirstFitPlacer(putting);
             greedySolver = new GreedySolver<>(ordering, extender);
         }

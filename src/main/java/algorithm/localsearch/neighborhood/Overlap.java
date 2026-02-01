@@ -7,7 +7,7 @@ import algorithm.greedy.extender.FirstFitPlacer;
 import algorithm.greedy.extender.GreedyExtender;
 import algorithm.greedy.ordering.GreedyOrdering;
 import algorithm.greedy.ordering.LargestAreaFirst;
-import algorithm.greedy.putting.BottemLeft;
+import algorithm.greedy.putting.BottomLeft;
 import algorithm.greedy.putting.ImprovedBottomLeft;
 import algorithm.greedy.putting.PuttingStrategy;
 import algorithm.greedy.putting.TryPutResult;
@@ -187,7 +187,7 @@ public class Overlap implements Neighborhood<OverlapPackingSolution> {
 
                     box.getRectangles().clear();
 
-                    PuttingStrategy puttingStrategy = new BottemLeft();
+                    PuttingStrategy puttingStrategy = new BottomLeft();
                     for (Rectangle rectangle : rectanglesToReposition) {
                         TryPutResult result = puttingStrategy.tryPut(rectangle, box);
                         if (result != null) {
@@ -313,7 +313,7 @@ public class Overlap implements Neighborhood<OverlapPackingSolution> {
 
                 boxToReposition.getRectangles().clear();
 
-                PuttingStrategy puttingStrategy = new BottemLeft();
+                PuttingStrategy puttingStrategy = new BottomLeft();
                 for (Rectangle rectangle : rectanglesToReposition) {
                     TryPutResult result = puttingStrategy.tryPut(rectangle, boxToReposition);
                     if (result != null) {
