@@ -60,7 +60,7 @@ public class UIUtils {
         if (Objects.requireNonNull(type) == PuttingStrategyType.SHELF) {
             return new Shelf();
         }
-        return new BottemLeft();
+        return new BottomLeft();
     }
 
     public static GreedyExtender<PackingSolution, Rectangle> getSelectedGreedyExtender(GreedyExtenderType type, PuttingStrategy putting) {

@@ -32,7 +32,6 @@ import javafx.scene.layout.*;
 import javafx.scene.text.Text;
 import utils.UIUtils;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -269,19 +268,15 @@ public class AppController {
         GreedyOrdering<Rectangle> ordering = new LargestAreaFirst();
         GreedySolver<PackingSolution, Rectangle> greedySolver = new GreedySolver<>(ordering, extender);
         PackingSolution initialSolution = new PackingSolution(instance.boxSize);
-        List<Rectangle> rectangles = new ArrayList<>();
-        for (Rectangle rect : instance.rectangles) {
-            rectangles.add(rect.copy());
-        }
         Date startTime = new Date();
-        PackingSolution greedySolution = greedySolver.solve(initialSolution, rectangles);
+        PackingSolution greedySolution = greedySolver.solve(initialSolution, instance.rectangles);
 
         // Local search
         Neighborhood<PackingSolution> neighborhood = new Geometry();
         Objective<PackingSolution> objective = new KampkeObjective();
         LocalSearchSolver<PackingSolution> localSearchSolver = new LocalSearchSolver<>(neighborhood, objective, Integer.parseInt(maxIterations.getText()));
         System.out.println("Solving with initial boxes: " + greedySolution.boxes().size());
-        PackingSolution improvedSolution = localSearchSolver.solve(greedySolution.copy());
+        PackingSolution improvedSolution = localSearchSolver.solve(greedySolution);
         Date endTime = new Date();
         Performance.setText("Time: " + (endTime.getTime() - startTime.getTime()) + " ms" +
                 " | Boxes used: " + improvedSolution.boxes().size() +

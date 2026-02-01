@@ -5,7 +5,7 @@ import algorithm.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BottemLeft implements PuttingStrategy {
+public class BottomLeft implements PuttingStrategy {
 
     private record Candidate(int x, int y) { }
 
